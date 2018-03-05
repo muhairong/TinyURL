@@ -6,6 +6,6 @@ urlpatterns = [
     path('', views.index, name='index'),
     # /convert/short_id/
     path('<slug:short_id>/', views.redirect, name='redirect'),
-    # /convert/shorten/longurl/
-    path('shorten/<url>/', views.shorten, name='shorten'),
+    # /convert/shorten/
+    path('shorten', views.shorten, name='shorten'),
 ]

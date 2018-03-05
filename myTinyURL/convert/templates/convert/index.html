@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My tinyurl site</title>
+</head>
+<body>
+<h1> Tiny URL </h1>
+<div>
+    <form>
+    {% csrf_token %}
+    <div class="col-sm-9">
+        <input type="text" name="url" id="url" class="form-control input-sm" placeholder="http://www.facebook.com" />
+    </div>
+
+    <div class="col-sm-3">
+        <button id="submitButton" class="btn btn-primary">Submit</button></p>
+    </div>
+    <div class="panel-footer"><span id="url-result">Enter the URL above and click submit!</span></div>
+    </form>
+</div>
+<script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js">
+
+</script>
+<script>
+    $(document).ready(function(){
+        $("#submitButton").click(function(e){
+		e.preventDefault();
+            var url = $("#url").val();
+            $.ajax({
+                url: '/convert/shorten',
+                type: "POST",
+                data: {
+                    'url': url,
+		     'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
+                },
+
+                dataType: 'json',
+                success: returnSuccess,
+            })
+        });
+    });
+    function returnSuccess(data, textStatus, jqXHR) {
+        if (data) {
+            $('#url-result').text(data);
+            $('#url').val("");
+        } else {
+            $('#url-result').text("Do not submit blank.");
+        }
+    }
+</script>
+</body>
+</html>
