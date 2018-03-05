@@ -1,29 +1,31 @@
-from django.shortcuts import render, render_to_response, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
 from .models import URL
 from django.conf import settings
-import random, string
-
+import random, string, json
 # Create your views here.
 
 def index(request):
-    return HttpResponse("Hello, welcome to my shorturl convert page.")
+    return render(request, 'convert/index.html')
 
-def shorten(request, url):
+def shorten(request):
+    url = request.POST['url']
+    print("received short url request:{}".format(url))
     if (url == ''):
-        return HttpResponse("Error...Empty url")
-    print 
+        print("received url is empty")
+        return JsonResponse("Error: blank url...", safe=False)
     short_id = gen()
     record = URL(httpurl=url, short_id=short_id)
     record.save()
     response = settings.SITE_URL + "/" + short_id
-    return HttpResponse(response)
-
+    print("return response: {}".format(response))
+    return JsonResponse(response, safe=False)
 
 def redirect(request, short_id):
     url = get_object_or_404(URL, pk=short_id)
     url.count += 1
     url.save()
+    print(url.httpurl)
     return HttpResponse(url.httpurl)
 
 def gen():
