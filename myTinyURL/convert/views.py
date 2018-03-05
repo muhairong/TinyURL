@@ -2,7 +2,10 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, JsonResponse
 from .models import URL
 from django.conf import settings
-import random, string, json
+import random, string
+import logging
+
+logging.getLogger().setLevel(logging.INFO)
 # Create your views here.
 
 def index(request):
@@ -10,22 +13,26 @@ def index(request):
 
 def shorten(request):
     url = request.POST['url']
-    print("received short url request:{}".format(url))
+    logging.info('received url %s', url)
+    #print("received short url request:{}".format(url))
     if (url == ''):
-        print("received url is empty")
+        logging.error('received url is empty')
+        #print("received url is empty")
         return JsonResponse("Error: blank url...", safe=False)
     short_id = gen()
     record = URL(httpurl=url, short_id=short_id)
     record.save()
     response = settings.SITE_URL + "/" + short_id
-    print("return response: {}".format(response))
+    #print("return response: {}".format(response))
+    logging.info('return response is %s', response)
     return JsonResponse(response, safe=False)
 
 def redirect(request, short_id):
     url = get_object_or_404(URL, pk=short_id)
     url.count += 1
     url.save()
-    print(url.httpurl)
+    #print(url.httpurl)
+    logging.info('long url is %s',url.httpurl)
     return HttpResponse(url.httpurl)
 
 def gen():
