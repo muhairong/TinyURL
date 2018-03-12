@@ -2,12 +2,14 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 from .models import URL
 import random, string
+import time
 
 class Convert():
     """core engine of url conversion
     """
 
     SHORT_ID_LENGTH = 6
+    LATEST_SHORT_ID = '000000'
 
     @classmethod
     def long2short(cls, http_url):
@@ -62,7 +64,7 @@ class Convert():
         Return:
             A unique short_id
             type: str
-        """
+
         char_candidates = string.ascii_uppercase + string.digits + string.ascii_lowercase
         while True:
             short_id = ''.join(
@@ -73,3 +75,12 @@ class Convert():
                 tmp = URL.objects.get(pk=short_id)
             except:
                 return short_id
+        """
+        # rewrite the method of generate short_id.
+        # Instead of a random short_id, we save the latest one and just simply add 1 to it.
+        short_id =str(int(Convert.LATEST_SHORT_ID) + 1).rjust(6, '0')
+        print(short_id)
+        time.sleep(10)
+        Convert.LATEST_SHORT_ID = short_id
+        print(Convert.LATEST_SHORT_ID)
+        return short_id
