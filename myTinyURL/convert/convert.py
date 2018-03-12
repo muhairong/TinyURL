@@ -80,7 +80,7 @@ class Convert():
         # Instead of a random short_id, we save the latest one and just simply add 1 to it.
         short_id =str(int(Convert.LATEST_SHORT_ID) + 1).rjust(6, '0')
         print(short_id)
-        time.sleep(10)
+        time.sleep(1)
         Convert.LATEST_SHORT_ID = short_id
         print(Convert.LATEST_SHORT_ID)
         return short_id
