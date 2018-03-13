@@ -13,3 +13,6 @@ class URL(models.Model):
     http_url = models.URLField(max_length=200)
     pub_date = models.DateTimeField(auto_now=True)
     count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.short_id
