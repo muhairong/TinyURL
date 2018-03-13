@@ -1,15 +1,25 @@
+import time, logging
+#import random, string
+
 from django.shortcuts import get_object_or_404
 from django.conf import settings
+
 from .models import URL
-import random, string
-import time
+
+logging.getLogger().setLevel(logging.INFO)
 
 class Convert():
     """core engine of url conversion
     """
 
     SHORT_ID_LENGTH = 6
-    LATEST_SHORT_ID = '000000'
+    obj = URL.objects.all()
+    #obj = URL.objects.order_by('-pub_date')[0]
+    if not obj:
+        LATEST_SHORT_ID = '000000'
+    else:
+        obj = URL.objects.latest('pub_date')
+        LATEST_SHORT_ID = obj.short_id
 
     @classmethod
     def long2short(cls, http_url):
@@ -78,9 +88,9 @@ class Convert():
         """
         # rewrite the method of generate short_id.
         # Instead of a random short_id, we save the latest one and just simply add 1 to it.
-        short_id =str(int(Convert.LATEST_SHORT_ID) + 1).rjust(6, '0')
-        print(short_id)
+        short_id =str(int(Convert.LATEST_SHORT_ID) + 1).rjust(Convert.SHORT_ID_LENGTH, '0')
+        logging.info('short_id is %s', short_id)
         time.sleep(1)
         Convert.LATEST_SHORT_ID = short_id
-        print(Convert.LATEST_SHORT_ID)
+        logging.info('LATEST_SHORT_ID is %s', Convert.LATEST_SHORT_ID)
         return short_id
