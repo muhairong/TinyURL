@@ -1,11 +1,12 @@
 from locust import HttpLocust, TaskSet, task
 
 class UserBehavior(TaskSet):
+    """
+    on_start is called when a Locust start before any task is scheduled
+    """
     def on_start(self):
-        """ on_start is called when a Locust start before any task is scheduled """
         self.index()
 
-    @task(1)
     def index(self):
         self.client.get("/convert")
 
@@ -17,6 +18,13 @@ class UserBehavior(TaskSet):
                          {"url":"www.baidu.com"},
                          headers={'X-CSRFToken': csrftoken})
 
+
+    @task(10)
+    def s2l(self):
+        self.client.get("/convert/000001")
+
+# we have a HttpLocust class which represents a user
+# where we define how long a simulated user should wait between executing tasks
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior
     min_wait = 5000
