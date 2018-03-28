@@ -1,13 +1,15 @@
 import time, logging
-#import random, string
+# import random, string
 
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from django.conf import settings
-from threading import Lock
+from django.db import transaction
 
-from .models import URL
+from .models import URL, LatestId
 
 logging.getLogger().setLevel(logging.INFO)
+
 
 class Convert():
     """core engine of url conversion
@@ -31,12 +33,19 @@ class Convert():
             The response(SITE_URL + short_id) we just create
             type: str
         """
-        lock = Lock()
-        lock.acquire()
-        short_id = Convert.gen_short_id()
-        lock.release()
-        record = URL(http_url=http_url, short_id=short_id)
-        record.save()
+        with transaction.atomic():
+            latest = LatestId.objects.select_for_update().get(id=1)
+            latest_short_id = latest.short_id
+            short_id = str(int(latest_short_id) + 1).rjust(Convert.SHORT_ID_LENGTH, '0')
+            logging.info('new short_id is %s', short_id)
+            latest.short_id = short_id
+            logging.info('latest short_id is %s', latest.short_id)
+            time.sleep(4)
+            logging.info('done sleep')
+            latest.save()
+            record = URL(http_url=http_url, short_id=short_id)
+            record.save()
+
         response = settings.SITE_URL + '/' + short_id
         return response
 
@@ -55,9 +64,14 @@ class Convert():
             The corresponding long url
             type: str
         """
-        url = get_object_or_404(URL, pk=short_id)
-        url.count += 1
-        url.save()
+        with transaction.atomic():
+            try:
+                url = URL.objects.select_for_update().get(short_id=short_id)
+            except URL.DoesNotExist:
+                raise Http404("Short_id does not exist")
+            # url = get_object_or_404(URL, pk=short_id)
+            url.count += 1
+            url.save()
         return url.http_url
 
     @classmethod
@@ -85,15 +99,15 @@ class Convert():
         # rewrite the method of generate short_id.
         # Instead of a random short_id, we save the latest one and just simply add 1 to it.
 
-        obj = URL.objects.all()
-        if not obj:
-            latest_short_id = '000000'
-        else:
-            obj = URL.objects.order_by('-short_id')[0]
-            #obj = URL.objects.latest('pub_date')
+        try:
+            obj = LatestId.objects.latest()
             latest_short_id = obj.short_id
+        except IndexError:
+            logging.debug('Empty DB. Create short id from zero')
+            latest_short_id = '000000'
 
-        short_id =str(int(latest_short_id) + 1).rjust(Convert.SHORT_ID_LENGTH, '0')
+        latest = LatestId.objects.select_for_update().get(short_id=latest_short_id)
+        short_id = str(int(latest_short_id) + 1).rjust(Convert.SHORT_ID_LENGTH, '0')
         logging.info('short_id is %s', short_id)
-        #time.sleep(1)
+        latest.save()
         return short_id

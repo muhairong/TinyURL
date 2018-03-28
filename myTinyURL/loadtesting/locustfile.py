@@ -1,4 +1,5 @@
 from locust import HttpLocust, TaskSet, task
+import random, string
 
 class UserBehavior(TaskSet):
     """
@@ -18,10 +19,19 @@ class UserBehavior(TaskSet):
                          {"url":"www.baidu.com"},
                          headers={'X-CSRFToken': csrftoken})
 
-
-    @task(10)
+    @task(2)
     def s2l(self):
-        self.client.get("/convert/000001")
+        """
+        char_candidates = string.digits
+        short_id = ''.join(
+            random.choice(char_candidates)
+            for i in range(3)
+        )
+        short_id = str(short_id).rjust(6,'0')
+        url = '/convert/' + short_id
+        self.client.get(url)
+        """
+        self.client.get("/convert/000003/")
 
 # we have a HttpLocust class which represents a user
 # where we define how long a simulated user should wait between executing tasks
