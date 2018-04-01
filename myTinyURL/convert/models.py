@@ -9,10 +9,21 @@ class URL(models.Model):
     the publication date pub_date,
     and the click count
     """
-    short_id = models.SlugField(max_length=6,primary_key=True)
+    short_id = models.SlugField(max_length=6, primary_key=True)
     http_url = models.URLField(max_length=200)
     pub_date = models.DateTimeField(auto_now=True)
-    count = models.IntegerField(default=0)
+    count = models.IntegerField(default=1)
 
     def __str__(self):
         return self.short_id
+
+
+class LatestId(models.Model):
+    """ LatestId model
+        only contains one record to store the latest short_id
+        A record has four fields:
+        the id (is the primary key)
+        the short_id
+    """
+    id = models.IntegerField(primary_key=True)
+    short_id = models.SlugField(max_length=6)

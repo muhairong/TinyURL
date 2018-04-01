@@ -1,0 +1,35 @@
+Test Result
+
+Number of users: 10
+HOST: http://127.0.0.1:8000
+
+locust --host=http://127.0.0.1:8000
+    [2018-03-25 18:26:43,064] mhr/INFO/locust.main: Starting web monitor at *:8089
+    [2018-03-25 18:26:43,065] mhr/INFO/locust.main: Starting Locust 0.8.1
+    [2018-03-25 18:26:55,103] mhr/INFO/locust.runners: Hatching and swarming 10 clients at the rate 10 clients/s...
+    [2018-03-25 18:26:56,119] mhr/INFO/locust.runners: All locusts hatched: WebsiteUser: 10
+
+Tasks:
+    GET /convert: get the index page
+    task2: GET /convert/000001: find short_id in DB, then redirect to the long url
+    task1: POST /convert/shorten: convert given long url to a short id
+
+Task’s execution ratio:
+    task2 is executed fifth as much as task1
+
+
+ Name                                                          # reqs      # fails     Avg     Min     Max  |  Median   req/s
+--------------------------------------------------------------------------------------------------------------------------------------------
+ GET /convert                                                      13     0(0.00%)      23      10      29  |      25    0.20
+ GET /convert/000001                                              113     0(0.00%)     372     276    1188  |     300    1.00
+ POST /convert/shorten                                             13     0(0.00%)     101      66     174  |      92    0.20
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Total                                                            139     0(0.00%)                                       1.40
+
+Percentage of the requests completed within given times
+ Name                                                           # reqs    50%    66%    75%    80%    90%    95%    98%    99%   100%
+--------------------------------------------------------------------------------------------------------------------------------------------
+ GET /convert                                                       13     25     26     26     26     27     29     29     29     29
+ GET /convert/000001                                               113    300    320    320    330    460    940    970   1000   1188
+ POST /convert/shorten                                              13     92    100    100    110    150    170    170    170    174
+--------------------------------------------------------------------------------------------------------------------------------------------

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'convert',
+    'django_mysql',
 ]
 
 MIDDLEWARE = [
@@ -73,11 +74,26 @@ WSGI_APPLICATION = 'myTinyURL.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'tinyurl',
+        'USER': 'root',
+        'PASSWORD': 'aaaa',
+        'HOST': 'localhost',
+        'PORT': '',
+        'OPTIONS': {
+            # Tell MySQLdb to connect with 'utf8mb4' character set
+            'charset': 'utf8mb4',
+        },
     }
 }
 
