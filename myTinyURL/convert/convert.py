@@ -15,14 +15,15 @@ class Convert():
     """core engine of url conversion
     """
     SHORT_ID_LENGTH = 6
+    WRITE_SYN = 1
 
     @classmethod
     def long2short(cls, http_url):
         """Convert the given long url to a shorter one.
 
         Work as following steps:
-        Call gen_shortid() to generate a random short id.
-        Save to database.
+        Get the latest short_id from LatestId table, then add 1 to generate a new short_id
+        Update latest and save the new recode in URL table
         Generate the response using SITE_URL.
 
         Args:
@@ -39,9 +40,9 @@ class Convert():
             short_id = str(int(latest_short_id) + 1).rjust(Convert.SHORT_ID_LENGTH, '0')
             logging.info('new short_id is %s', short_id)
             latest.short_id = short_id
-            logging.info('latest short_id is %s', latest.short_id)
-            time.sleep(4)
-            logging.info('done sleep')
+            # logging.info('latest short_id is %s', latest.short_id)
+            # time.sleep(4)
+            # logging.info('done sleep')
             latest.save()
             record = URL(http_url=http_url, short_id=short_id)
             record.save()
@@ -53,14 +54,33 @@ class Convert():
     def short2long(cls, short_id):
         """Convert given short_id to its corresponding long url.
 
-        Find in the database, the primary key is short_id.
-        If found, update this record click counts and save it.
+        According to Convert.WRITE_SYN, call short2long_SYN or short2long_NOT_SYN to find httpurl
 
         Args:
             short_id: a short url we want to convert
             type: str
 
         Return:
+            The corresponding long url
+            type: str
+        """
+        if Convert.WRITE_SYN:
+            return Convert.short2long_SYN(short_id)
+        else:
+            # Read operation has no need to update and lock the row in database
+            return Convert.short2long_NOT_SYN(short_id)
+
+    @classmethod
+    def short2long_SYN(cls, short_id):
+        """Convert given short_id to its corresponding long url synchronously
+
+        Find in the database, the primary key is short_id.
+        Lock the corresponding row in database. If found, update this record click counts and save it.
+
+        :param
+            short_id: a short url we want to convert
+            type: str
+        :return:
             The corresponding long url
             type: str
         """
@@ -72,6 +92,22 @@ class Convert():
             # url = get_object_or_404(URL, pk=short_id)
             url.count += 1
             url.save()
+        return url.http_url
+
+    @classmethod
+    def short2long_NOT_SYN(cls, short_id):
+        """Convert given short_id to its corresponding long url
+
+        Simply find in database and return the corresponding long url.
+
+        :param
+            short_id: a short url we want to convert
+            type: str
+        :return:
+            The corresponding long url
+            type: str
+        """
+        url = get_object_or_404(URL, pk=short_id)
         return url.http_url
 
     @classmethod
@@ -96,18 +132,3 @@ class Convert():
             except:
                 return short_id
         """
-        # rewrite the method of generate short_id.
-        # Instead of a random short_id, we save the latest one and just simply add 1 to it.
-
-        try:
-            obj = LatestId.objects.latest()
-            latest_short_id = obj.short_id
-        except IndexError:
-            logging.debug('Empty DB. Create short id from zero')
-            latest_short_id = '000000'
-
-        latest = LatestId.objects.select_for_update().get(short_id=latest_short_id)
-        short_id = str(int(latest_short_id) + 1).rjust(Convert.SHORT_ID_LENGTH, '0')
-        logging.info('short_id is %s', short_id)
-        latest.save()
-        return short_id

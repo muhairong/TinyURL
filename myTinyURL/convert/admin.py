@@ -10,7 +10,11 @@ class UrlsAdmin(admin.ModelAdmin):
     ordering = ['pub_date']
 
 class LatestIdAdmin(admin.ModelAdmin):
+    """ Register Url model
+    """
     list_display = ('id', 'short_id',)
 
+
+# Add these two models on admin page
 admin.site.register(URL, UrlsAdmin)
 admin.site.register(LatestId, LatestIdAdmin)

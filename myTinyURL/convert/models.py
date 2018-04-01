@@ -18,7 +18,12 @@ class URL(models.Model):
         return self.short_id
 
 
-#
 class LatestId(models.Model):
+    """ LatestId model
+        only contains one record to store the latest short_id
+        A record has four fields:
+        the id (is the primary key)
+        the short_id
+    """
     id = models.IntegerField(primary_key=True)
     short_id = models.SlugField(max_length=6)
