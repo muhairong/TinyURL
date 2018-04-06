@@ -1,26 +1,34 @@
-import logging
 import threading
+import queue
+from MyLogger import logger
+from StopSignal import StopSignal
+from Stat import Stat
 
 class Worker(threading.Thread):
-    def __init__(self, workerID, taskQueue):
+    def __init__(self, workerID):
         threading.Thread.__init__(self)
         self.id = workerID
-        self.task_queue = taskQueue
 
     def run(self):
         while True:
-            task = self.task_queue.get(block=True)
-            logging.info('Worker {} is executing task {}'.format(self.id, task.id))
+            stop = StopSignal.stop_workers.value
+            if stop:
+                break
+            try:
+                task = Stat.task_queue.get(block=True, timeout=3)
+            except queue.Empty:
+                continue
+            logger.info('Worker {} is executing task {}'.format(self.id, task.id))
             task.execute()
+        logger.info("Worker stopped: {}".format(self.id))
 
 class WorkerManager(object):
-    def __init__(self, workerNum, taskQueue):
+    def __init__(self, workerNum):
         self.worker_num = workerNum
-        self.task_queue = taskQueue
-        logging.info('Creating {} workers'.format(self.worker_num))
+        logger.info('Creating {} workers'.format(self.worker_num))
         self.workers = []
         for i in range(self.worker_num):
-            worker = Worker(i, self.task_queue)
+            worker = Worker(i)
             self.workers.append(worker)
 
     def execute(self):

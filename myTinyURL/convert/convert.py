@@ -15,7 +15,7 @@ class Convert():
     """core engine of url conversion
     """
     SHORT_ID_LENGTH = 6
-    WRITE_SYN = 1
+    WRITE_SYN = 0
 
     @classmethod
     def long2short(cls, http_url):
