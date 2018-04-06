@@ -1,16 +1,18 @@
-import queue
 import time
-import logging
 import random, string
 
 from WorkerManager import WorkerManager
 from Task import Task
+from MyLogger import logger
+from StopSignal import StopSignal
+from Stat import Stat
+import threading
 
-logging.getLogger().setLevel(logging.DEBUG)
-
-class WorkLoad(object):
+class WorkLoad(threading.Thread):
     def __init__(self, config):
+        threading.Thread.__init__(self)
         self.config = config
+        StopSignal.lock = threading.Lock()
 
     # Follow steps to execute
     # 1. Create task queue and result queue
@@ -19,47 +21,40 @@ class WorkLoad(object):
     # 4. Start to create tasks based on config
     # 5. Running ...
     # 6. Wait for all tasks being executed by checking result list
-    def execute(self):
-        self.task_queue = queue.Queue()
-        self.result_queue = queue.Queue()
-
-        self.worker_mgr = WorkerManager(self.config.getWorkerNum(), self.task_queue)
+    def run(self):
+        self.worker_mgr = WorkerManager(self.config.getWorkerNum())
         self.worker_mgr.execute()
         self.createTasks()
-        logging.info('result size {}'.format(self.task_queue.qsize()))
-        while self.getTotalTask() != self.result_queue.qsize():
-            logging.debug('Task still running {}/{}. Waiting for another 3 seconds'.format(
-                self.result_queue.qsize(), self.getTotalTask()
+        while self.getTotalTask() != Stat.finished_tasks.value:
+            logger.info('Task still running {}/{}. Waiting for another 3 seconds'.format(
+                Stat.finished_tasks.value, self.getTotalTask()
             ))
             time.sleep(3)
-        return self.genResult()
-
-    def genResult(self):
-        return self.result_queue
+        logger.info('Now sleep 3 seconds and stop all workers')
+        time.sleep(3)
+        StopSignal.stop_workers.get_and_set(1)
 
     def createTasks(self):
         choice = self.weight_choice()
         task_id = 0
         for nth_sec in range(self.config.getRuntime()):
-            logging.info('Creating tasks at {} sec'.format(nth_sec))
+            logger.info('Creating tasks at {} sec'.format(nth_sec))
             for ith_task in range(self.config.getQPS()):
-                logging.info('Creating tasks {}'.format(task_id))
                 task_type = random.choice(choice)
                 task_id = task_id + 1
+                logger.info('Creating tasks {}:{}'.format(task_id, task_type))
                 task = self.createTask(task_id, task_type)
-                self.task_queue.put(task)
+                Stat.gen_tasks += 1
+                Stat.task_queue.put(task)
             time.sleep(1)
 
     def createTask(self, id, taskType):
-        # TODO: create specific task and its config
         param = {}
-        # def sendShort2Long(self, hostname, index_url, short_id):
-        # sendLong2Short(self, hostname, index_url, convert_url, long_url)
         hostname = self.config.getHostname()
         char_candidates = string.digits
         short_id = ''.join(
             random.choice(char_candidates)
-            for i in range(2)
+            for i in range(3)
         )
         index_url = self.config.getIndexUrl()
         convert_url = self.config.getConvertUrl()
@@ -75,9 +70,9 @@ class WorkLoad(object):
             param = {"type":taskType, "hostname":hostname, "index_url":index_url,
                      "convert_url":convert_url, "long_url":long_url}
         else:
-            logging.error('Unsupported task type {}'.format(taskType))
+            logger.error('Unsupported task type {}'.format(taskType))
 
-        return Task(id, param, self.result_queue)
+        return Task(id, param)
 
     def weight_choice(self):
         task_list = ['read', 'write']

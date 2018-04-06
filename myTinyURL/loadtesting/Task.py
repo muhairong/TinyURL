@@ -1,24 +1,35 @@
-import logging
+from MyLogger import logger
 from HttpConn import SyncHttpConn
+from Stat import Stat
+import time
 
 class Task(object):
-    def __init__(self, id, param, result_queue):
+    def __init__(self, id, param):
         self.id = id
         self.param = param
-        self.result_queue = result_queue
+        self.create_time = time.time()
 
     def execute(self):
-        logging.info('Running task: {}'.format(self.id))
+        logger.info('Running task: {}'.format(self.id))
+        self.send_time = time.time()
         if self.param['type'] == 'read':
             result = self.readTask()
         elif self.param['type'] == 'write':
             result = self.writeTask()
         else:
-            logging.error('Unsupported task type {}'.format(self.param['type']))
-        self.genResult(result)
+            logger.error('Unsupported task type {}'.format(self.param['type']))
+        self.response_time = time.time()
 
-    def genResult(self, result):
-        self.result_queue.put(result)
+        Stat.finished_tasks += 1
+        task_stat = {
+            'id': self.id,
+            'type': self.param['type'],
+            'create_time': self.create_time,
+            'send_time': self.send_time,
+            'response_time': self.response_time,
+            'succ': result['succ'],
+        }
+        Stat.result_queue.put(task_stat)
 
     def readTask(self):
         request = SyncHttpConn()

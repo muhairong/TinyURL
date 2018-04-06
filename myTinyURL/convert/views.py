@@ -42,4 +42,6 @@ def redirect(request, short_id):
     url = Convert.short2long(short_id)
     logging.info('long url is %s', url)
     raw_url = "https://" + url
-    return HttpResponseRedirect(raw_url)
+    return JsonResponse(raw_url, safe=False)
+    # Too slow
+    # return HttpResponseRedirect(raw_url)

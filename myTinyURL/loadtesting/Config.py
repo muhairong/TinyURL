@@ -1,3 +1,4 @@
+import json
 class Config(object):
     def __init__(self):
         self.weight = []
@@ -8,14 +9,24 @@ class Config(object):
         self.convert_url = '/convert/shorten'
         self.index_url = '/convert/'
 
+    def __str__(self):
+        return 'Weight: {}\nQPS: {}\nRuntime: {}\nWorkerNum: {}\nHostname: {}\n'.format(
+            self.getWeight(), self.getQPS(), self.getRuntime(), self.getWorkerNum(), self.getHostname(),
+        )
+
     def loadFromFile(self, filename):
-        f = open(filename, 'r')
-        w = list(map(int, f.readline().split(',')))
-        self.weight = {'read':w[0], 'write':w[1]}
-        self.qps = eval(f.readline())
-        self.runtime = eval(f.readline())
-        self.worker_num = eval(f.readline())
-        f.close()
+        with open(filename, 'r') as f:
+            config = json.load(f)
+        w = []
+        w.append(config['read_weight'])
+        w.append(config['write_weight'])
+        self.weight = {'read': w[0], 'write': w[1]}
+        self.qps = config['qps']
+        self.runtime = config['runtime']
+        self.worker_num = config['worker_num']
+        self.hostname = config['hostname']
+        self.convert_url = config['convert_url']
+        self.index_url = config['index_url']
 
     def getWeight(self):
         return self.weight

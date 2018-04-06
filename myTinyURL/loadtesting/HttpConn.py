@@ -2,8 +2,7 @@ import requests
 import logging
 import asyncio
 from optparse import OptionParser
-
-logging.getLogger().setLevel(logging.DEBUG)
+from MyLogger import logger
 
 class ConnResult():
     def __init__(self):
@@ -30,27 +29,46 @@ class SyncHttpConn(HttpConn):
 
     # url must start with backslash
     def sendShort2Long(self,hostname, index_url, short_id):
-        logging.debug('Sending sync get to {} with {} {}'.format(hostname, index_url, short_id))
-        request = '{}{}{}'.format(hostname, index_url, short_id)
-        response = requests.get(request)
-        logging.debug(response)
-        # TODO: check response and set result
-        self.result = response
+        try:
+            logger.debug('Sending sync get to {} with {} {}'.format(hostname, index_url, short_id))
+            request = '{}{}{}'.format(hostname, index_url, short_id)
+            response = requests.get(request)
+            if response.status_code >= 400:
+                succ = False
+            else:
+                succ = True
+            self.result = {
+                'succ': succ,
+            }
+        except Exception as e:
+            self.result = {
+                'succ': False
+            }
 
     # url must start with backslash
     def sendLong2Short(self, hostname, index_url, convert_url, long_url):
-        logging.debug('Sending sync post to {} with {}'.format(hostname, long_url))
-        session = requests.Session()
-        r = session.get('{}{}'.format(hostname, index_url))
-        csrftoken = r.cookies[HttpConn.TOKENKEY]
-        response = session.post('{}{}'.format(hostname, convert_url),
-                         {"url":long_url},
-                         headers={HttpConn.CSRFTOKENKEY: csrftoken})
-        # TODO: check response and set result
-        self.result = response
+        try:
+            logger.debug('Sending sync post to {} with {}'.format(hostname, long_url))
+            session = requests.Session()
+            r = session.get('{}{}'.format(hostname, index_url))
+            csrftoken = r.cookies[HttpConn.TOKENKEY]
+            response = session.post('{}{}'.format(hostname, convert_url),
+                             {"url":long_url},
+                             headers={HttpConn.CSRFTOKENKEY: csrftoken})
+            if response.status_code >= 400:
+                succ = False
+            else:
+                succ = True
+            self.result = {
+                'succ': succ,
+            }
+        except Exception as e:
+            self.result = {
+                'succ': False
+            }
 
     def getResult(self):
-        logging.debug('Calling getResult')
+        return self.result
 """
 class AsyncHttpConn(HttpConn):
     def __init__(self):

@@ -1,5 +1,8 @@
-2,3
-20
-3
-4
-http://127.0.0.1:8000
+read_weight 5
+write_weight 1
+qps 10
+runtime 10
+worker_num 3
+hostname http://127.0.0.1:8000
+convert_url /convert/shorten
+index_url /convert/

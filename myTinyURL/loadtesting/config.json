@@ -1,0 +1,1 @@
+{"convert_url": "/convert/shorten", "runtime": 100, "index_url": "/convert/", "worker_num": 10, "write_weight": 1, "qps": 2, "hostname": "http://127.0.0.1:8000", "read_weight": 5}
